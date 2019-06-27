@@ -12,9 +12,32 @@ https://hackweek.suse.com/projects/architecting-a-machine-learning-project-with-
 >
 >_However, instructions here should be also valid [openSUSE Kubic](https://kubic.opensuse.org/) and in general for any [kubernetes](https://kubernetes.io/)+[cri-o](https://cri-o.io/) distribution_  
 
-# How to setup SUSE CaaSP to work with GPU
+# How to setup SUSE CaaSP 4.0 Beta3 to work with GPU
 
-...
+SUSE CaaSP 4.0 is build on top of Kubernetes and cri-o. What we need to do is start by installing SUSE CaaSP and then setup the nvidia parts that glue kubernetes, cri-o and NVIDIA drivers, and then setup a NVIDIA kubernetes device plugin, so pods can "expose" gpus as resources.
+
+|-----------------------------|
+NVIDIA kubernetes device plugin
+|-----------------------------|
+          kubernetes
+|-----------------------------|
+           cri-o
+|-----------------------------|
+        cri-o OCI hook
+|-----------------------------|
+ nvidia-container-runtime-hook
+|-----------------------------|
+     nvidia-container-cli
+|-----------------------------|
+     libnvidia-container
+|-----------------------------|
+        nvidia-drivers
+      (kernel and CUDA)        
+|-----------------------------|
+         NVIDIA GPU
+|-----------------------------|            
+
+
   
 ## Installing SUSE CaaSP
 
