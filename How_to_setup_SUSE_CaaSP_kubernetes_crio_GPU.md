@@ -315,6 +315,7 @@ So we manage! We have SUSE CaaSP Cluster scheduling pods that need GPUs to a nod
 
 > __Warning__
 > Pods need to mount some host paths to be able to access nvidia libs, command and devices. In SUSE CaaSP Beta3 there was no restriction but you could have some PSP and so not be able to do so. If that is the case, you could add a namespaced RoleBinding:
+
     ---
     apiVersion: v1
     kind: ServiceAccount
@@ -335,11 +336,11 @@ So we manage! We have SUSE CaaSP Cluster scheduling pods that need GPUs to a nod
     - kind: ServiceAccount
       name: nvidia-device-plugin
       namespace: kube-system
-    >
-    > And then in your DaemonSet spec, add `serviceAccount: nvidia-device-plugin` .
-   > 
-   > This creates the ServiceAccount+RoleBinding in the kube-system
-    namespace - if you're deploying into another NS, swap out `kube-system` 
-    for the namespace you're using.
+    
+> And then in your DaemonSet spec, add `serviceAccount: nvidia-device-plugin` .
+    
+> This creates the ServiceAccount+RoleBinding in the kube-system
+namespace - if you're deploying into another NS, swap out `kube-system` 
+for the namespace you're using.
     
 
