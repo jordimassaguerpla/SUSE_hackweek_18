@@ -178,7 +178,7 @@ And we have the libnvidia container installed! Now let's go for the hook, that w
 
 ## Installing nvidia-container-runtime-hook
 
-Since we are using cri-o, all we need to do is to setup a [OCI hook](https://github.com/cri-o/cri-o#oci-hooks-support) that will run some custom binary _pre-starting_ a container. This binary mount host paths to make the nvidia-container-cli, libnvidia-container, and devices available inside the container.
+Since we are using cri-o, all we need to do is to setup a [OCI hook](https://github.com/cri-o/cri-o#oci-hooks-support) that will run some custom binary _pre-starting_ a container. This binary will setup GPU access for the container by leveraging nvidia-container-cli which we already installed.
 
 This is the [nvidia-container-runtime-hook](https://github.com/NVIDIA/nvidia-container-runtime/tree/master/hook).
 
@@ -193,7 +193,7 @@ Unfortunately, NVIDIA is not building this for SUSE and, alike the libnvidia-con
     yum install --downloadonly nvidia-container-runtime-hook
     cp /var/cache/yum/x86_64/7/nvidia-container-runtime/packages/nvidia-container-runtime-hook-1.4.0-2.x86_64.rpm /var/tmp
     exit
-    urpm nvidia-container-runtime-hook-1.4.0-2.x86_64.rpm
+    unrpm nvidia-container-runtime-hook-1.4.0-2.x86_64.rpm
 
 now you can copy the contents of the rpm
 
