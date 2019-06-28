@@ -66,6 +66,8 @@ More on ambassador at https://www.getambassador.io/
 
 Now that we have the kubeflow dashboard, we are ready to create a notebook server.
 
+![KubeFlow dashboard](kubeflow.png)
+
 # Create a notebook server
 
 With the default kubeflow "deployment" you will already have the option to start a [Jupyter notebook](https://jupyter.org/) server.
@@ -84,6 +86,8 @@ in the "Extra Resouces" section, we will add
 This way, the notebook will be sheduled in the node with the GPU.
 
 And then, we are ready for our first notebook.
+
+![NoteBook Server](notebooks.png)
 
 # The HelloWorld Notebook
 
