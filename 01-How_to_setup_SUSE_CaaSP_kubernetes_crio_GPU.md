@@ -344,3 +344,6 @@ namespace - if you're deploying into another NS, swap out `kube-system`
 for the namespace you're using.
     
 
+**What is next?**
+
+Deploy kubeflow on this cluster https://github.com/jordimassaguerpla/SUSE_hackweek_18/blob/master/02-How_to_deploy_kubeflow.md
