@@ -98,6 +98,6 @@ Our first notebook will be the Hello World. Just write in the notebook:
   
 and press "Shift+Enter" and voila! you will see "Hello World!"
 
-
+[HelloWorkNotebook](hello_work_jupyter_network.png)
 
 
