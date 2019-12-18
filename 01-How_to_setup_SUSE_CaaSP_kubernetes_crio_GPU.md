@@ -67,7 +67,7 @@ _Do you want to know if the cluster is properly setup? Run the [k8s conformance 
 
 Once we have a SUSE CaaSP cluster running, we can proceed to install the NVIDIA drivers.
 
-## Installing nvidia graphics driver kernel module
+## Installing nvidia graphics driver kernel module on the GPU workstation
 
 So we have a workstation with NVIDIA GPU [compatible with](https://developer.nvidia.com/cuda-gpus) [CUDA](https://developer.nvidia.com/cuda-zone) (in our case Quadro K2000). Now is time to install the right drivers so we can use that.
 
@@ -93,6 +93,7 @@ Then, add your user to the video group, and also to the root user:
 
     sudo usermod -G video -a sles
     sudo usermod -G video -a root
+    sudo su - sles  
 
 > __Important__: If you are not a member of the video group, you won't be able to access the nvidia devs at /dev/nvidia* . Later you will see that even running as root is not enough, that you need to **explicetely** run as **root:video**.
 
