@@ -198,6 +198,9 @@ Unfortunately, NVIDIA is not building this for SUSE and, alike the libnvidia-con
     exit
     unrpm nvidia-container-runtime-hook-1.4.0-2.x86_64.rpm
 
+Create the unrpm script from: https://github.com/openSUSE/obs-build/blob/master/unrpm
+Unpack the rpm: `bash unrpm nvidia-container-toolkit-1.0.5-2.x86_64.rpm`
+
 now you can copy the contents of the rpm
 
 * /etc/nvidia-container-runtime/config.toml 
