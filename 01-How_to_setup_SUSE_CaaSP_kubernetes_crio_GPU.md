@@ -217,16 +217,21 @@ And **very important** , edit the  /etc/nvidia-container-runtime/config.toml  an
 
     user = "root:video"
 
+Update the metadata of the Nvidia device files:
+
+    sudo chmod 0666 /dev/nvidia*
+    sudo chown root:video /dev/nvidia*
+
 > __Tip__
 > Do you want to test if this is working?
 > Install podman, comment the cni_default_network in /etc/containers/libpod.conf, and run
->  _sudo podman  run nvidia/cuda nvidia-smi_
+>  _sudo podman  run --rm nvidia/cuda nvidia-smi_
 >  and you should get the nvidia-smi output as you were running it on the host
 
 Now, cri-o is able to run a container with GPU acceleration. Next step is kubernetes "setup".
 
 
-## NVIDIA Device Plugin
+## Create the NVIDIA Device Plugin on the CaaS Platform adminstrative workstation
 
 The NVIDIA device plugin for Kubernetes is a _Daemonset_ that allows you to automatically:
 
@@ -242,52 +247,19 @@ Thus, let's "install" it:
 
 And that is all!
 
-See that the node is exposing the NVIDIA GPUs by running
+Now let's verify the worker node is exposing the NVIDIA GPUs and we can run a pod that access the GPUs
 
-    kubectl describe pod gpu
+Set this variable for the next several commands: `export WORKER=`
 
-And you should get something like:
-    
-    Allocatable:                                                                    
-    ...
-    nvidia.com/gpu:     1                                                          
-    Allocated resources:                                                            
-      (Total limits may be over 100 percent, i.e., overcommitted.)                  
-      Resource           Requests  Limits
-      --------           --------  ------                                           
-      cpu                0 (0%)    0 (0%)                                           
-      memory             0 (0%)    0 (0%)                                           
-      ephemeral-storage  0 (0%)    0 (0%)                                           
-      nvidia.com/gpu     0         0                                                
-      Events:              <none>   
+Ensure the correct number of GPUs are recognized on the worker node: `kubectl describe node $WORKER | egrep "gpu|Unschedulable"`
+* The output should include three lines beginning with `nvidia.com/gpu`. The first two should match the number of GPUs on the node. The last line should show quanties zero  
 
-See the **nvidia.com/gpu** ? :)
+NOTE: If the previous command also showed `Unschedulable` as `true`, uncordon the node before continuing: `kubectl uncordon $WORKER`  
 
-## Testing
+Ensure that CaaS Platform can run a GPU enabled pod on the node:  
 
-We have all setup and running now, let's have some more fun and do some testing :)
-
-Let's create a file named *cuda-vector-add.yaml*:  
-                                                                                
-    apiVersion: v1                                                                  
-    kind: Pod                                                                       
-    metadata:                                                                       
-      name: cuda-vector-add                                                         
-    spec:                                                                           
-      restartPolicy: OnFailure                                                      
-      containers:                                                                   
-        - name: cuda-vector-add                                                     
-          # https://github.com/kubernetes/kubernetes/blob/v1.7.11/test/images/nvidia-cuda/Dockerfile
-          image: "k8s.gcr.io/cuda-vector-add:v0.1"                                  
-          resources:                                                                
-            limits:                                                                 
-              nvidia.com/gpu: 1 # requesting 1 GPU 
-
-"Run it":
-    
-    kubectl create -f cuda-vector-add.yaml                                          
-
-and see the output
+Set this variable to the number of GPUs on this node: `export GPUS=`  
+Create the cuda-vector-add.yaml file
 
     kubectl logs cuda-vector-add                                       
     [Vector addition of 50000 elements]                                             
