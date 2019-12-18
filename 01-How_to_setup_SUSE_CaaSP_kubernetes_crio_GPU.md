@@ -142,9 +142,10 @@ https://github.com/NVIDIA/libnvidia-container/releases/download/v1.0.0/libnvidia
 
 You can untar that package and copy the binaries in bin and libs to /usr/bin and /usr/lib64.
 
+    wget https://github.com/NVIDIA/libnvidia-container/releases/download/v1.0.0/libnvidia-container_1.0.0_x86_64.tar.xz
     tar xJf libnvidia-container_1.0.0_x86_64.tar.xz
-    cp libnvidia-container_1.0.0/usr/local/bin/nvidia-container-cli /usr/bin
-    cp libnvidia-container_1.0.0/usr/local/lib/libnvidia-container.so* /usr/lib64
+    sudo cp libnvidia-container_1.0.0/usr/local/bin/nvidia-container-cli /usr/bin
+    sudo cp libnvidia-container_1.0.0/usr/local/lib/libnvidia-container.so* /usr/lib64
 
 > __Info__
 > I guess you could also copy to /usr/local and set the PATH and the ldconfig paths
@@ -177,7 +178,7 @@ and you should get
     
 And we have the libnvidia container installed! Now let's go for the hook, that will plug cri-o with the libnvidia-container.
 
-## Installing nvidia-container-runtime-hook
+## Installing nvidia-container-runtime-hook on the GPU workstation
 
 Since we are using cri-o, all we need to do is to setup a [OCI hook](https://github.com/cri-o/cri-o#oci-hooks-support) that will run some custom binary _pre-starting_ a container. This binary will setup GPU access for the container by leveraging nvidia-container-cli which we already installed.
 
@@ -188,10 +189,11 @@ This is the [nvidia-container-runtime-hook](https://github.com/NVIDIA/nvidia-con
 
 Unfortunately, NVIDIA is not building this for SUSE and, alike the libnvidia-container, is neither building it distribution agnostic. I could have build it for SUSE, but this would have taken me the whole hackweek (at least), so instead I took the CentOS RPM, unpack it and copied the binaries over:
 
-    docker run -ti -v$PWD:/var:/tmp centos:7
+    sudo zypper --non-interactive install podman
+    sudo podman run --rm -ti -v$PWD:/var/tmp centos:7
     DIST=$(. /etc/os-release; echo $ID$VERSION_ID)
     curl -s -L https://nvidia.github.io/nvidia-container-runtime/$DIST/nvidia-container-runtime.repo |    tee /etc/yum.repos.d/nvidia-container-runtime.repo
-    yum install --downloadonly nvidia-container-runtime-hook
+    yum install --downloadonly nvidia-container-runtime-hook   # May have answer "y" to accept Nvidia's GPG key
     cp /var/cache/yum/x86_64/7/nvidia-container-runtime/packages/nvidia-container-runtime-hook-1.4.0-2.x86_64.rpm /var/tmp
     exit
     unrpm nvidia-container-runtime-hook-1.4.0-2.x86_64.rpm
