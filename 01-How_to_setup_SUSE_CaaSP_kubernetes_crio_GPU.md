@@ -261,23 +261,23 @@ Ensure that CaaS Platform can run a GPU enabled pod on the node:
 Set this variable to the number of GPUs on this node: `export GPUS=`  
 Create the cuda-vector-add.yaml file
 
-cat <<EOF> cuda-vector-add.yaml
-apiVersion: v1                                                                  
-kind: Pod                                                                       
-metadata:                                                                       
-  name: cuda-vector-add                                                         
-spec:                                                                           
-  restartPolicy: OnFailure                                                      
-  nodeSelector:
-    kubernetes.io/hostname: $WORKER
-  containers:                                                                   
-    - name: cuda-vector-add                                                     
-      # https://github.com/kubernetes/kubernetes/blob/v1.7.11/test/images/nvidia-cuda/Dockerfile
-      image: "k8s.gcr.io/cuda-vector-add:v0.1"                                  
-      resources:                                                                
-        limits:                                                                 
-          nvidia.com/gpu: $GPUS
-EOF
+    cat <<EOF> cuda-vector-add.yaml
+    apiVersion: v1                                                                  
+    kind: Pod                                                                       
+    metadata:                                                                       
+      name: cuda-vector-add                                                         
+    spec:                                                                           
+      restartPolicy: OnFailure                                                      
+      nodeSelector:
+        kubernetes.io/hostname: $WORKER
+      containers:                                                                   
+        - name: cuda-vector-add                                                     
+          # https://github.com/kubernetes/kubernetes/blob/v1.7.11/test/images/nvidia-cuda/Dockerfile
+          image: "k8s.gcr.io/cuda-vector-add:v0.1"                                  
+          resources:                                                                
+            limits:                                                                 
+              nvidia.com/gpu: $GPUS
+    EOF
 
 
     kubectl logs cuda-vector-add                                       
