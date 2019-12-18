@@ -293,11 +293,11 @@ The outpush should be similar to this:
     Test PASSED                                                                     
     Done                                                                            
                                                                                 
-It should also show that the pod ran on this worker node  
+The last line just verifies that the pod ran on the correct worker node  
 
 Remove the pod: `kubectl delete -f cuda-vector-add.yaml`  
 
-If we were to run run this pod but change `export GPUS=` to a number greater than the number of GPUs on this node...
+If we were to run this pod again but change `export GPUS=` to a number greater than the number of GPUs on this node...
     
 Then we will see that this does not get scheduled:
   
