@@ -67,7 +67,7 @@ _Do you want to know if the cluster is properly setup? Run the [k8s conformance 
 
 Once we have a SUSE CaaSP cluster running, we can proceed to install the NVIDIA drivers.
 
-## Installing nvidia graphics driver kernel module on the GPU workstation
+## Installing the nvidia graphics driver kernel module on the GPU workstation
 
 So we have a workstation with NVIDIA GPU [compatible with](https://developer.nvidia.com/cuda-gpus) [CUDA](https://developer.nvidia.com/cuda-zone) (in our case Quadro K2000). Now is time to install the right drivers so we can use that.
 
@@ -231,7 +231,7 @@ Update the metadata of the Nvidia device files:
 Now, cri-o is able to run a container with GPU acceleration. Next step is kubernetes "setup".
 
 
-## Create the NVIDIA Device Plugin on the CaaS Platform adminstrative workstation
+## Create the NVIDIA Device Plugin from the CaaS Platform admin host
 
 The NVIDIA device plugin for Kubernetes is a _Daemonset_ that allows you to automatically:
 
@@ -247,19 +247,21 @@ Thus, let's "install" it:
 
 And that is all!
 
+## Verify functionality from the CaaS Platform admin host
+
 Now let's verify the worker node is exposing the NVIDIA GPUs and we can run a GPU enabled pod 
 
 Set this variable for the next several commands: `export WORKER=`
 
 Ensure the correct number of GPUs are recognized on the worker node: `kubectl describe node $WORKER | egrep "gpu|Unschedulable"`
-* If the output shows two lines beginning with `nvidia.com/gpu` and contain the number of GPUs on this node, then it is correctly exposing its GPUs to CaaS Platform. The last `nvidia.com/gpu` line should show quanties zero  
+* If the output shows two lines beginning with `nvidia.com/gpu` and contain the number of GPUs on the worker node, then it is correctly exposing its GPUs to CaaS Platform. The last `nvidia.com/gpu` line should show quanties zero  
 
 NOTE: If the previous command also showed `Unschedulable` as `true`, uncordon the node before continuing: `kubectl uncordon $WORKER`  
 
 Ensure that CaaS Platform can run a GPU enabled pod on the node:  
 
-Set this variable to the number of GPUs on this node: `export GPUS=`  
-Create the cuda-vector-add.yaml file
+Set this variable to the number of GPUs on the worker node: `export GPUS=`  
+Create the cuda-vector-add.yaml file:
 
     cat <<EOF> cuda-vector-add.yaml
     apiVersion: v1                                                                  
@@ -279,10 +281,9 @@ Create the cuda-vector-add.yaml file
               nvidia.com/gpu: $GPUS
     EOF
 
-Apply the pod creation file and review the pod's logs and node assignment: `kubectl apply -f cuda-vector-add.yaml && kubectl logs cuda-vector-add && kubectl get pods -o wide | grep cuda-vector-add`  
+Apply the manifest and review the pod's logs and node assignment: `kubectl apply -f cuda-vector-add.yaml && kubectl logs cuda-vector-add && kubectl get pods -o wide | grep cuda-vector-add`  
 
 The outpush should be similar to this:
-* Remove the pod: `kubectl delete -f cuda-vector-add.yaml`
 
     kubectl logs cuda-vector-add                                       
     [Vector addition of 50000 elements]                                             
@@ -292,7 +293,9 @@ The outpush should be similar to this:
     Test PASSED                                                                     
     Done                                                                            
                                                                                 
-It should also show that the pod ran on this worker node
+It should also show that the pod ran on this worker node  
+
+Remove the pod: `kubectl delete -f cuda-vector-add.yaml`  
 
 If we were to run run this pod but change `export GPUS=` to a number greater than the number of GPUs on this node...
     
