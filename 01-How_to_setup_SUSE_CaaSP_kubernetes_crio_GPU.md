@@ -279,6 +279,10 @@ Create the cuda-vector-add.yaml file
               nvidia.com/gpu: $GPUS
     EOF
 
+Apply the pod creation file and review the pod's logs and node assignment: `kubectl apply -f cuda-vector-add.yaml && kubectl logs cuda-vector-add && kubectl get pods -o wide | grep cuda-vector-add`  
+
+The outpush should be similar to this:
+* Remove the pod: `kubectl delete -f cuda-vector-add.yaml`
 
     kubectl logs cuda-vector-add                                       
     [Vector addition of 50000 elements]                                             
@@ -288,11 +292,11 @@ Create the cuda-vector-add.yaml file
     Test PASSED                                                                     
     Done                                                                            
                                                                                 
-if we change the requested gput to 2
-    
-    nvidia.com/gpu: 2 # requesting **2** GPU                              
+It should also show that the pod ran on this worker node
 
-Then you will see how this does not get scheduled, because our workstation has only 1 GPU:
+If we were to run run this pod but change `export GPUS=` to a number greater than the number of GPUs on this node...
+    
+Then we will see that this does not get scheduled:
   
     kubectl get pods                                                   
     NAME              READY   STATUS    RESTARTS   AGE                              
