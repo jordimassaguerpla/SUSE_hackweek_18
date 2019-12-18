@@ -247,12 +247,12 @@ Thus, let's "install" it:
 
 And that is all!
 
-Now let's verify the worker node is exposing the NVIDIA GPUs and we can run a pod that access the GPUs
+Now let's verify the worker node is exposing the NVIDIA GPUs and we can run a GPU enabled pod 
 
 Set this variable for the next several commands: `export WORKER=`
 
 Ensure the correct number of GPUs are recognized on the worker node: `kubectl describe node $WORKER | egrep "gpu|Unschedulable"`
-* The output should include three lines beginning with `nvidia.com/gpu`. The first two should match the number of GPUs on the node. The last line should show quanties zero  
+* If the output shows two lines beginning with `nvidia.com/gpu` and contain the number of GPUs on this node, then it is correctly exposing its GPUs to CaaS Platform. The last `nvidia.com/gpu` line should show quanties zero  
 
 NOTE: If the previous command also showed `Unschedulable` as `true`, uncordon the node before continuing: `kubectl uncordon $WORKER`  
 
@@ -260,6 +260,25 @@ Ensure that CaaS Platform can run a GPU enabled pod on the node:
 
 Set this variable to the number of GPUs on this node: `export GPUS=`  
 Create the cuda-vector-add.yaml file
+
+cat <<EOF> cuda-vector-add.yaml
+apiVersion: v1                                                                  
+kind: Pod                                                                       
+metadata:                                                                       
+  name: cuda-vector-add                                                         
+spec:                                                                           
+  restartPolicy: OnFailure                                                      
+  nodeSelector:
+    kubernetes.io/hostname: $WORKER
+  containers:                                                                   
+    - name: cuda-vector-add                                                     
+      # https://github.com/kubernetes/kubernetes/blob/v1.7.11/test/images/nvidia-cuda/Dockerfile
+      image: "k8s.gcr.io/cuda-vector-add:v0.1"                                  
+      resources:                                                                
+        limits:                                                                 
+          nvidia.com/gpu: $GPUS
+EOF
+
 
     kubectl logs cuda-vector-add                                       
     [Vector addition of 50000 elements]                                             
