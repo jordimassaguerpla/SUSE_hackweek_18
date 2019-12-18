@@ -196,16 +196,22 @@ Unfortunately, NVIDIA is not building this for SUSE and, alike the libnvidia-con
     yum install --downloadonly nvidia-container-runtime-hook   # May have answer "y" to accept Nvidia's GPG key
     cp /var/cache/yum/x86_64/7/nvidia-container-runtime/packages/nvidia-container-runtime-hook-1.4.0-2.x86_64.rpm /var/tmp
     exit
-    unrpm nvidia-container-runtime-hook-1.4.0-2.x86_64.rpm
 
-Create the unrpm script from: https://github.com/openSUSE/obs-build/blob/master/unrpm
+Create the unrpm script from: https://github.com/openSUSE/obs-build/blob/master/unrpm  
 Unpack the rpm: `bash unrpm nvidia-container-toolkit-1.0.5-2.x86_64.rpm`
 
-now you can copy the contents of the rpm
+Now you can copy the contents of the rpm into place
 
-* /etc/nvidia-container-runtime/config.toml 
-* /usr/bin/nvidia-container-runtime-hook
-* /usr/share/containers/oci/hooks.d/oci-nvidia-hook.json
+    sudo mkdir -p /etc/nvidia-container-runtime/
+    sudo mkdir -p /usr/libexec/oci/hooks.d/
+    sudo mkdir -p /usr/share/licenses/nvidia-container-toolkit-1.0.5/
+    
+    sudo cp etc/nvidia-container-runtime/config.toml /etc/nvidia-container-runtime/config.toml
+    sudo cp usr/bin/nvidia-container-toolkit /usr/bin/nvidia-container-toolkit
+    sudo cp usr/share/containers/oci/hooks.d/oci-nvidia-hook.json /usr/share/containers/oci/hooks.d/oci-nvidia-hook.json
+    sudo cp usr/libexec/oci/hooks.d/oci-nvidia-hook /usr/libexec/oci/hooks.d/oci-nvidia-hook
+    sudo cp usr/share/licenses/nvidia-container-toolkit-1.0.5/LICENSE /usr/share/licenses/nvidia-container-toolkit-1.0.5/LICENSE
+
 
 And **very important** , edit the  /etc/nvidia-container-runtime/config.toml  and set
 
