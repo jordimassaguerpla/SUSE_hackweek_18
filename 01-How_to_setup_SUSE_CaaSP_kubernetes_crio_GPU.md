@@ -73,7 +73,7 @@ So we have a workstation with NVIDIA GPU [compatible with](https://developer.nvi
 
 Drivers can be installed from [NVIDIA download servers](https://download.nvidia.com/suse/sle15sp1/x86_64/):
   
-    sudo zypper ar https://developer.nvidia.com/cuda-gpus nvidia
+    sudo zypper ar https://download.nvidia.com/suse/sle15sp1/ nvidia
     sudo zypper ref
     sudo zypper install nvidia-gfxG05-kmp-default
 
