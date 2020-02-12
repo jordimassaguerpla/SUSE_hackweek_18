@@ -76,6 +76,7 @@ Drivers can be installed from [NVIDIA download servers](https://download.nvidia.
     sudo zypper ar https://download.nvidia.com/suse/sle15sp1/ nvidia
     sudo zypper ref
     sudo zypper install nvidia-gfxG05-kmp-default
+    sudo modprobe nvidia
 
 You can check if drivers are loaded:
   
