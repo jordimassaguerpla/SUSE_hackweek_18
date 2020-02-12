@@ -1,6 +1,6 @@
-This is the result from my hackweek project:
+This is the result from my hackweek projects:
 https://hackweek.suse.com/projects/architecting-a-machine-learning-project-with-suse-caasp
-
+https://hackweek.suse.com/projects/packaging-libnvidia-containers-and-nvidia-container-runtime-hook
 
  
 > __Disclaimer__
@@ -132,6 +132,14 @@ What is [libnvidia-container](https://github.com/NVIDIA/libnvidia-container) ? S
 > This repository provides a library and a simple CLI utility to automatically configure GNU/Linux containers leveraging NVIDIA hardware.  
 The implementation relies on kernel primitives and is designed to be agnostic of the container runtime.
 >
+
+> __Update from hackweek 19th__
+> We now have packages as a result of hackweek 19th, you can install them with:
+>
+>    zypper ar https://download.opensuse.org/repositories/home:/jordimassaguerpla:/nvidia_container/SLE_15_SP1/ nvidia_container
+>    zypper install libnvidia-container
+> If you install the packages, you can skip this chapter and jump to __Installing nvidia-container-runtime-hook__
+
 Unfortunately, NVIDIA is not building packages for SUSE, so we will use the "distribution agnostic build", downloadable from the release page:
 
 https://github.com/NVIDIA/libnvidia-container/releases/download/v1.0.0/libnvidia-container_1.0.0_x86_64.tar.xz
@@ -185,6 +193,13 @@ This is the [nvidia-container-runtime-hook](https://github.com/NVIDIA/nvidia-con
 
 > _Info_
 > Note we don't need to install any modified runc or cri-o. This is the difference with docker. If we were using docker, we would need to install a modified runtime (runc) or modified docker (nvidia-docker). With cri-o, we can use upstream cri-o and we don't have to maintain a forked runc.
+
+> __Update from hackweek 19th__
+> We now have packages as a result of hackweek 19th, you can install them with:
+>
+>    zypper ar https://download.opensuse.org/repositories/home:/jordimassaguerpla:/nvidia_container/SLE_15_SP1/ nvidia_container
+>    zypper install nvidia-container-tookit
+> If you install the packages, you can skip this section and jump to __NVIDIA Device Plugin__
 
 Unfortunately, NVIDIA is not building this for SUSE and, alike the libnvidia-container, is neither building it distribution agnostic. I could have build it for SUSE, but this would have taken me the whole hackweek (at least), so instead I took the CentOS RPM, unpack it and copied the binaries over:
 
