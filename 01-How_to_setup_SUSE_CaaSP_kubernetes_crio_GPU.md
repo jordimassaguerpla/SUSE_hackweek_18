@@ -67,7 +67,7 @@ _Do you want to know if the cluster is properly setup? Run the [k8s conformance 
 
 Once we have a SUSE CaaSP cluster running, we can proceed to install the NVIDIA drivers.
 
-## Installing nvidia graphics driver kernel module
+## Installing the nvidia graphics driver kernel module on the GPU workstation
 
 So we have a workstation with NVIDIA GPU [compatible with](https://developer.nvidia.com/cuda-gpus) [CUDA](https://developer.nvidia.com/cuda-zone) (in our case Quadro K2000). Now is time to install the right drivers so we can use that.
 
@@ -94,6 +94,7 @@ Then, add your user to the video group, and also to the root user:
 
     sudo usermod -G video -a sles
     sudo usermod -G video -a root
+    sudo su - sles  
 
 > __Important__: If you are not a member of the video group, you won't be able to access the nvidia devs at /dev/nvidia* . Later you will see that even running as root is not enough, that you need to **explicetely** run as **root:video**.
 
@@ -150,9 +151,10 @@ https://github.com/NVIDIA/libnvidia-container/releases/download/v1.0.0/libnvidia
 
 You can untar that package and copy the binaries in bin and libs to /usr/bin and /usr/lib64.
 
+    wget https://github.com/NVIDIA/libnvidia-container/releases/download/v1.0.0/libnvidia-container_1.0.0_x86_64.tar.xz
     tar xJf libnvidia-container_1.0.0_x86_64.tar.xz
-    cp libnvidia-container_1.0.0/usr/local/bin/nvidia-container-cli /usr/bin
-    cp libnvidia-container_1.0.0/usr/local/lib/libnvidia-container.so* /usr/lib64
+    sudo cp libnvidia-container_1.0.0/usr/local/bin/nvidia-container-cli /usr/bin
+    sudo cp libnvidia-container_1.0.0/usr/local/lib/libnvidia-container.so* /usr/lib64
 
 > __Info__
 > I guess you could also copy to /usr/local and set the PATH and the ldconfig paths
@@ -185,7 +187,7 @@ and you should get
     
 And we have the libnvidia container installed! Now let's go for the hook, that will plug cri-o with the libnvidia-container.
 
-## Installing nvidia-container-runtime-hook
+## Installing nvidia-container-runtime-hook on the GPU workstation
 
 Since we are using cri-o, all we need to do is to setup a [OCI hook](https://github.com/cri-o/cri-o#oci-hooks-support) that will run some custom binary _pre-starting_ a container. This binary will setup GPU access for the container by leveraging nvidia-container-cli which we already installed.
 
@@ -203,34 +205,49 @@ This is the [nvidia-container-runtime-hook](https://github.com/NVIDIA/nvidia-con
 
 Unfortunately, NVIDIA is not building this for SUSE and, alike the libnvidia-container, is neither building it distribution agnostic. I could have build it for SUSE, but this would have taken me the whole hackweek (at least), so instead I took the CentOS RPM, unpack it and copied the binaries over:
 
-    docker run -ti -v$PWD:/var:/tmp centos:7
+    sudo zypper --non-interactive install podman
+    sudo podman run --rm -ti -v$PWD:/var/tmp centos:7
     DIST=$(. /etc/os-release; echo $ID$VERSION_ID)
     curl -s -L https://nvidia.github.io/nvidia-container-runtime/$DIST/nvidia-container-runtime.repo |    tee /etc/yum.repos.d/nvidia-container-runtime.repo
-    yum install --downloadonly nvidia-container-runtime-hook
+    yum install --downloadonly nvidia-container-runtime-hook   # May have answer "y" to accept Nvidia's GPG key
     cp /var/cache/yum/x86_64/7/nvidia-container-runtime/packages/nvidia-container-runtime-hook-1.4.0-2.x86_64.rpm /var/tmp
     exit
-    unrpm nvidia-container-runtime-hook-1.4.0-2.x86_64.rpm
 
-now you can copy the contents of the rpm
+Create the unrpm script from: https://github.com/openSUSE/obs-build/blob/master/unrpm  
+Unpack the rpm: `bash unrpm nvidia-container-toolkit-1.0.5-2.x86_64.rpm`
 
-* /etc/nvidia-container-runtime/config.toml 
-* /usr/bin/nvidia-container-runtime-hook
-* /usr/share/containers/oci/hooks.d/oci-nvidia-hook.json
+Now you can copy the contents of the rpm into place
+
+    sudo mkdir -p /etc/nvidia-container-runtime/
+    sudo mkdir -p /usr/libexec/oci/hooks.d/
+    sudo mkdir -p /usr/share/licenses/nvidia-container-toolkit-1.0.5/
+    
+    sudo cp etc/nvidia-container-runtime/config.toml /etc/nvidia-container-runtime/config.toml
+    sudo cp usr/bin/nvidia-container-toolkit /usr/bin/nvidia-container-toolkit
+    sudo cp usr/share/containers/oci/hooks.d/oci-nvidia-hook.json /usr/share/containers/oci/hooks.d/oci-nvidia-hook.json
+    sudo cp usr/libexec/oci/hooks.d/oci-nvidia-hook /usr/libexec/oci/hooks.d/oci-nvidia-hook
+    sudo cp usr/share/licenses/nvidia-container-toolkit-1.0.5/LICENSE /usr/share/licenses/nvidia-container-toolkit-1.0.5/LICENSE
+
 
 And **very important** , edit the  /etc/nvidia-container-runtime/config.toml  and set
 
     user = "root:video"
 
+Update the metadata of the Nvidia device files:
+
+    sudo chmod 0666 /dev/nvidia*
+    sudo chown root:video /dev/nvidia*
+
 > __Tip__
 > Do you want to test if this is working?
 > Install podman, comment the cni_default_network in /etc/containers/libpod.conf, and run
->  _sudo podman  run nvidia/cuda nvidia-smi_
+>  _sudo podman  run --rm nvidia/cuda nvidia-smi_
 >  and you should get the nvidia-smi output as you were running it on the host
 
 Now, cri-o is able to run a container with GPU acceleration. Next step is kubernetes "setup".
 
 
-## NVIDIA Device Plugin
+## Create the NVIDIA Device Plugin from the CaaS Platform admin host
 
 The NVIDIA device plugin for Kubernetes is a _Daemonset_ that allows you to automatically:
 
@@ -246,52 +263,43 @@ Thus, let's "install" it:
 
 And that is all!
 
-See that the node is exposing the NVIDIA GPUs by running
+## Verify functionality from the CaaS Platform admin host
 
-    kubectl describe pod gpu
+Now let's verify the worker node is exposing the NVIDIA GPUs and we can run a GPU enabled pod 
 
-And you should get something like:
-    
-    Allocatable:                                                                    
-    ...
-    nvidia.com/gpu:     1                                                          
-    Allocated resources:                                                            
-      (Total limits may be over 100 percent, i.e., overcommitted.)                  
-      Resource           Requests  Limits
-      --------           --------  ------                                           
-      cpu                0 (0%)    0 (0%)                                           
-      memory             0 (0%)    0 (0%)                                           
-      ephemeral-storage  0 (0%)    0 (0%)                                           
-      nvidia.com/gpu     0         0                                                
-      Events:              <none>   
+Set this variable for the next several commands: `export WORKER=`
 
-See the **nvidia.com/gpu** ? :)
+Ensure the correct number of GPUs are recognized on the worker node: `kubectl describe node $WORKER | egrep "gpu|Unschedulable"`
+* If the output shows two lines beginning with `nvidia.com/gpu` and contain the number of GPUs on the worker node, then it is correctly exposing its GPUs to CaaS Platform. The last `nvidia.com/gpu` line should show quanties zero  
 
-## Testing
+NOTE: If the previous command also showed `Unschedulable` as `true`, uncordon the node before continuing: `kubectl uncordon $WORKER`  
 
-We have all setup and running now, let's have some more fun and do some testing :)
+Ensure that CaaS Platform can run a GPU enabled pod on the node:  
 
-Let's create a file named *cuda-vector-add.yaml*:  
-                                                                                
+Set this variable to the number of GPUs on the worker node: `export GPUS=`  
+Create the cuda-vector-add.yaml file:
+
+    cat <<EOF> cuda-vector-add.yaml
     apiVersion: v1                                                                  
     kind: Pod                                                                       
     metadata:                                                                       
       name: cuda-vector-add                                                         
     spec:                                                                           
       restartPolicy: OnFailure                                                      
+      nodeSelector:
+        kubernetes.io/hostname: $WORKER
       containers:                                                                   
         - name: cuda-vector-add                                                     
           # https://github.com/kubernetes/kubernetes/blob/v1.7.11/test/images/nvidia-cuda/Dockerfile
           image: "k8s.gcr.io/cuda-vector-add:v0.1"                                  
           resources:                                                                
             limits:                                                                 
-              nvidia.com/gpu: 1 # requesting 1 GPU 
+              nvidia.com/gpu: $GPUS
+    EOF
 
-"Run it":
-    
-    kubectl create -f cuda-vector-add.yaml                                          
+Apply the manifest and review the pod's logs and node assignment: `kubectl apply -f cuda-vector-add.yaml && kubectl logs cuda-vector-add && kubectl get pods -o wide | grep cuda-vector-add`  
 
-and see the output
+The outpush should be similar to this:
 
     kubectl logs cuda-vector-add                                       
     [Vector addition of 50000 elements]                                             
@@ -301,11 +309,13 @@ and see the output
     Test PASSED                                                                     
     Done                                                                            
                                                                                 
-if we change the requested gput to 2
-    
-    nvidia.com/gpu: 2 # requesting **2** GPU                              
+The last line just verifies that the pod ran on the correct worker node  
 
-Then you will see how this does not get scheduled, because our workstation has only 1 GPU:
+Remove the pod: `kubectl delete -f cuda-vector-add.yaml`  
+
+If we were to run this pod again but change `export GPUS=` to a number greater than the number of GPUs on this node...
+    
+Then we will see that this does not get scheduled:
   
     kubectl get pods                                                   
     NAME              READY   STATUS    RESTARTS   AGE                              
